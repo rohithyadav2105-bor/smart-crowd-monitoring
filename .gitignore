@@ -3,3 +3,4 @@ uploads/
 *.mp4
 *.pt
 __pycache__/
+milestone_*.py
