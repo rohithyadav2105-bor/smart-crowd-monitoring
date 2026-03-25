@@ -37,17 +37,15 @@ body {
 
 <h2 class="text-center mb-4">🚨 Smart Crowd Monitoring</h2>
 
-<!-- BUTTON MENU -->
 <div class="text-center mb-4">
     <button class="btn btn-light m-1" onclick="showSection('stats')">📊 Stats</button>
     <button class="btn btn-warning m-1" onclick="showSection('alert')">🚨 Alert</button>
     <button class="btn btn-info m-1" onclick="showSection('graph')">📈 Graph</button>
 </div>
 
-<!-- ===================== STATS SECTION ===================== -->
 <div id="stats" class="section active">
 
-    <!-- UPLOAD -->
+    
     <div class="text-center mb-4">
         <form id="uploadForm">
             <input type="file" name="file" required class="form-control w-50 mx-auto mb-2">
@@ -55,7 +53,7 @@ body {
         </form>
     </div>
 
-    <!-- STATS CARDS -->
+
     <div class="row text-center">
 
         <div class="col-md-3">
@@ -88,20 +86,20 @@ body {
 
     </div>
 
-    <!-- VIDEO -->
+    
     <div class="text-center mt-4">
         <img src="/video_feed" width="500" height="300" class="rounded shadow">
     </div>
 
 </div>
 
-<!-- ===================== ALERT SECTION ===================== -->
+
 <div id="alert" class="section text-center">
     <h3>🚨 Alert History </h3>
     <div id="alertContainer" class="row mt-3"></div>
 </div>
 
-<!-- ===================== GRAPH SECTION ===================== -->
+
 <div id="graph" class="section text-center">
     <h3>📊 Crowd Analysis</h3>
     <canvas id="myChart" width="400" height="120"></canvas>
@@ -110,7 +108,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// SWITCH SECTIONS (FIXED)
+
 function showSection(id) {
     document.querySelectorAll('.section').forEach(sec => {
         sec.classList.remove('active');
@@ -123,7 +121,7 @@ function showSection(id) {
     }
 }
 
-// FETCH STATS
+
 setInterval(() => {
     fetch('/stats')
     .then(res => res.json())
@@ -133,14 +131,14 @@ setInterval(() => {
         document.getElementById("exit").innerText = data.exit;
         document.getElementById("inside").innerText = data.inside;
 
-        // UPDATE GRAPH
+        
         chart.data.labels = data.history.time;
         chart.data.datasets[0].data = data.history.inside;
         chart.update();
     });
 }, 1000);
 
-// UPLOAD VIDEO
+
 document.getElementById("uploadForm").onsubmit = function(e) {
     e.preventDefault();
 
@@ -154,7 +152,7 @@ document.getElementById("uploadForm").onsubmit = function(e) {
     .then(data => alert(data.message));
 }
 
-// LOAD ALERTS
+
 function loadAlerts() {
     fetch('/alerts')
     .then(res => res.json())
@@ -189,7 +187,7 @@ function loadAlerts() {
     });
 }
 
-// CHART
+
 let ctx = document.getElementById('myChart').getContext('2d');
 let chart = new Chart(ctx, {
     type: 'line',

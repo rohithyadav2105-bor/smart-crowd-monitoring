@@ -8,24 +8,17 @@ from flask import Flask, render_template, Response, jsonify, request, send_from_
 from werkzeug.utils import secure_filename
 from ultralytics import YOLO
 
-# -----------------------------
-# FLASK APP SETUP
-# -----------------------------
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# -----------------------------
-# GLOBAL VARIABLES
-# -----------------------------
+
 current_video_source = None
 last_alert_time = 0
 
-# -----------------------------
-# LOGGING FUNCTION
-# -----------------------------
+
 def log_event(msg):
     with open("system_log.txt", "a") as f:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -33,9 +26,7 @@ def log_event(msg):
 
 log_event("System Started")
 
-# -----------------------------
-# STATS INITIALIZATION
-# -----------------------------
+
 def init_stats():
     return {
         "total": 0,
@@ -58,14 +49,9 @@ MAX_LIMIT = 5
 line_y = 700
 MAX_HISTORY = 50
 
-# -----------------------------
-# LOAD MODEL
-# -----------------------------
 model = YOLO("yolov8n.pt")
 
-# -----------------------------
-# UPDATE HISTORY
-# -----------------------------
+
 def update_history(time_str, total, entry, exit_count, inside_count):
     stats["history"]["time"].append(time_str)
     stats["history"]["total"].append(total)
@@ -80,13 +66,9 @@ def update_history(time_str, total, entry, exit_count, inside_count):
         stats["history"]["exit"].pop(0)
         stats["history"]["inside"].pop(0)
 
-# -----------------------------
-# VIDEO PROCESSING
-# -----------------------------
 def generate_frames():
     global stats, current_video_source, last_alert_time
 
-    # WAIT UNTIL VIDEO IS UPLOADED
     while current_video_source is None:
         blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
         cv2.putText(blank_frame, "Upload a video to start analysis.",
@@ -117,7 +99,7 @@ def generate_frames():
 
         for r in results:
             for box in r.boxes:
-                if int(box.cls[0]) == 0:  # Person class
+                if int(box.cls[0]) == 0:  
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     cx = (x1 + x2) // 2
                     cy = (y1 + y2) // 2
@@ -127,7 +109,7 @@ def generate_frames():
 
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-        # TRACK MOVEMENT
+        
         used_curr = set()
         for (px, py) in prev_centroids:
             best_idx, best_dist = -1, 999999
@@ -155,19 +137,19 @@ def generate_frames():
 
         prev_centroids = current_centroids[:]
 
-        # DRAW LINE
+        
         cv2.line(frame, (0, line_y), (frame.shape[1], line_y), (0, 255, 255), 2)
 
-        # UPDATE STATS
+        
         stats["total"] = total_count
         stats["inside"] = max(0, stats["entry"] - stats["exit"])
         stats["alert"] = stats["inside"] > MAX_LIMIT
 
-        # UPDATE HISTORY
+        
         current_time_str = datetime.datetime.now().strftime("%H:%M:%S")
         update_history(current_time_str, total_count, stats["entry"], stats["exit"], stats["inside"])
 
-        # ALERT SYSTEM
+    
         if stats["alert"]:
             cv2.putText(frame, "WARNING: OVERCROWDING",
                         (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
@@ -183,7 +165,7 @@ def generate_frames():
 
                 log_event(f"Overcrowding alert! ({stats['inside']} inside)")
 
-        # STREAM FRAME
+        
         _, buffer = cv2.imencode('.jpg', frame)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' +
@@ -191,9 +173,7 @@ def generate_frames():
 
     cap.release()
 
-# -----------------------------
-# ROUTES
-# -----------------------------
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -243,8 +223,6 @@ def upload_video():
 
     return jsonify({"message": "File uploaded successfully"}), 200
 
-# -----------------------------
-# RUN APP
-# -----------------------------
+
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)
